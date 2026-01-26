@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
 	"github.com/DoctorBohne/DeadLionBackend/internal/http/handler"
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
-	"github.com/DoctorBohne/DeadLionBackend/internal/repositories/user"
 )
 
 type UserRepo interface {
@@ -17,12 +17,16 @@ type UserService struct {
 	r UserRepo
 }
 
+func NewUserService(r UserRepo) *UserService {
+	return &UserService{r}
+}
+
 func (u UserService) FindOrCreate(ctx context.Context, in handler.CreateUserInput) (*models.User, bool, error) {
 	user, err := u.r.FindByIssuerSub(ctx, in.Issuer, in.Subject)
 	if err == nil {
 		return user, false, nil
 	}
-	if !errors.Is(err, user.ErrNotFound) {
+	if !errors.Is(err, custom_errors.ErrNotFound) {
 		return nil, false, err
 	}
 

@@ -27,6 +27,10 @@ type MeHandler struct {
 	usersvc UserService
 }
 
+func NewMeHandler(usersvc UserService) *MeHandler {
+	return &MeHandler{usersvc: usersvc}
+}
+
 func (m *MeHandler) Me(c *gin.Context) {
 	claims, ok := requestctx.ClaimsFrom(c.Request.Context())
 	if !ok || claims.Subject == "" || claims.Issuer == "" {

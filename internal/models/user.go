@@ -12,5 +12,5 @@ type User struct {
 	GivenName           string
 	FamilyName          string
 	Email               string
-	onboardingCompleted bool `gorm:"not null;default:false"`
+	OnboardingCompleted bool `gorm:"not null;default:false"`
 }
