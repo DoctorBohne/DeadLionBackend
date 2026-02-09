@@ -29,6 +29,6 @@ func NewRouter(d Deps) *gin.Engine {
 	v1 := r.Group("/api/v1")
 	v1.Use(d.AuthMiddleWare)
 	v1.GET("/me", meHandler.Me)
-
+	v1.POST("/me/onboardingcomplete", meHandler.UpdateOnboardingComplete)
 	return r
 }

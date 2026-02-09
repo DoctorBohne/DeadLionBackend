@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
 	"github.com/DoctorBohne/DeadLionBackend/internal/requestctx"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ type CreateUserInput struct {
 
 type UserService interface {
 	FindOrCreate(ctx context.Context, in CreateUserInput) (*models.User, bool, error)
+	MarkOnboardingComplete(ctx context.Context, issuer, sub string) error
 }
 type MeHandler struct {
 	usersvc UserService
@@ -57,4 +59,41 @@ func (m *MeHandler) Me(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"user": user})
 	}
+}
+
+func (m *MeHandler) UpdateOnboardingComplete(c *gin.Context) {
+	issuerAny, ok := c.Get("issuer")
+	if !ok {
+		c.JSON(401, gin.H{"error": "missing issuer"})
+		return
+	}
+	subAny, ok := c.Get("sub")
+	if !ok {
+		c.JSON(401, gin.H{"error": "missing sub"})
+		return
+	}
+
+	issuer, _ := issuerAny.(string)
+	sub, _ := subAny.(string)
+	if issuer == "" || sub == "" {
+		c.JSON(401, gin.H{"error": "invalid auth context"})
+		return
+	}
+
+	err := m.usersvc.MarkOnboardingComplete(c.Request.Context(), issuer, sub)
+	if err != nil {
+		switch err {
+		case custom_errors.ErrAlreadBoarded:
+			c.JSON(409, gin.H{"error": "onboarding already complete"})
+			return
+		case custom_errors.ErrNotFound:
+			c.JSON(404, gin.H{"error": "user not found"})
+			return
+		default:
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(200, gin.H{"onboardingComplete": true})
 }
