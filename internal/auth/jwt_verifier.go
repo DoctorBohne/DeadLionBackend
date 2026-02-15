@@ -44,16 +44,13 @@ type CustomClaims struct {
 	Scope string `json:"scope,omitempty"`
 	Azp   string `json:"azp,omitempty"`
 
-	Email             string `json:"email,omitempty"`
-	EmailVerified     bool   `json:"email_verified,omitempty"`
-	Name              string `json:"name,omitempty"`
-	PreferredUsername string `json:"preferred_username,omitempty"`
-	GivenName         string `json:"given_name,omitempty"`
-	FamilyName        string `json:"family_name,omitempty"`
-
-	RealmAccess struct {
-		Roles []string `json:"roles,omitempty"`
-	} `json:"realm_access,omitempty"`
+	Email         string `json:"email,omitempty"`
+	EmailVerified bool   `json:"email_verified,omitempty"`
+	Name          string `json:"name,omitempty"`
+	GivenName     string `json:"user_first_name,omitempty"`
+	FamilyName    string `json:"user_last_name,omitempty"`
+	Username      string `json:"username,omitempty"`
+	Sid           string `json:"sid,omitempty"`
 }
 
 func (v *Verifier) VerifyAccessToken(raw string) (*CustomClaims, error) {
