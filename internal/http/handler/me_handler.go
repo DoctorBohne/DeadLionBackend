@@ -1,36 +1,20 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
-	"github.com/DoctorBohne/DeadLionBackend/internal/models"
 	"github.com/DoctorBohne/DeadLionBackend/internal/requestctx"
+	"github.com/DoctorBohne/DeadLionBackend/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
-type CreateUserInput struct {
-	Issuer            string
-	Subject           string
-	Email             string
-	EmailVerified     bool
-	Name              string
-	PreferredUsername string
-	GivenName         string
-	FamilyName        string
-}
-
-type UserService interface {
-	FindOrCreate(ctx context.Context, in CreateUserInput) (*models.User, bool, error)
-	MarkOnboardingComplete(ctx context.Context, issuer, sub string) error
-}
 type MeHandler struct {
-	usersvc UserService
+	usersvc services.UserService
 }
 
-func NewMeHandler(usersvc UserService) *MeHandler {
-	return &MeHandler{usersvc: usersvc}
+func NewMeHandler(usersvc *services.UserService) *MeHandler {
+	return &MeHandler{*usersvc}
 }
 
 func (m *MeHandler) Me(c *gin.Context) {
@@ -39,7 +23,7 @@ func (m *MeHandler) Me(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	in := &CreateUserInput{
+	in := &services.CreateUserInput{
 		Issuer:            claims.Issuer,
 		Subject:           claims.Subject,
 		Email:             claims.Email,
