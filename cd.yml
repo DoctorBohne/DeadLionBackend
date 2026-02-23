@@ -12,6 +12,10 @@ jobs:
     steps:
     - name: Checkout des aktuellen Repositories
       uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.24.3
     - name: Führe CD-Skripte aus
       run: |
         echo "Repository geklont, jetzt starte die CD-Prozesse..."
