@@ -4,4 +4,4 @@ import "errors"
 
 var ErrNotFound = errors.New("not found")
 
-var ErrAlreadBoarded = errors.New("alread boarded")
+var ErrAlreadBoarded = errors.New("already boarded")
