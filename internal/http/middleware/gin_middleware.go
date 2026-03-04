@@ -40,7 +40,8 @@ func AuthMiddleware(v *auth.Verifier) gin.HandlerFunc {
 		}
 		ctx := requestctx.WithClaims(c.Request.Context(), rc)
 		c.Request = c.Request.WithContext(ctx)
-
+		c.Set("issuer", rc.Issuer)
+		c.Set("sub", rc.Subject)
 		c.Set(GinClaimsKey, rc)
 		c.Next()
 	}
