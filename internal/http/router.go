@@ -22,10 +22,10 @@ func NewRouter(d Deps) *gin.Engine {
 
 	// User bundle
 	userRepo := user.NewUserRepo(d.DB)
-	userService := services.NewUserService(userRepo)
-	meHandler := handler.NewMeHandler(userService)
+	userService := services.NewUserService(*userRepo)
+	meHandler := handler.NewMeHandler(*userService)
 	abgabeRepo := abgabe.NewAbgabeRepo(d.DB)
-	abgabeService := services.NewAbgabeService(abgabeRepo)
+	abgabeService := services.NewAbgabeService(*abgabeRepo)
 	abgabeHandler := handler.NewAbgabeHandler(abgabeService, userService)
 
 	r.GET("/healthz", func(c *gin.Context) {

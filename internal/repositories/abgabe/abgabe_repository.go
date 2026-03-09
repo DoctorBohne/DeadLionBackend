@@ -3,6 +3,7 @@ package abgabe
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/DoctorBohne/DeadLionBackend/internal/abgabe"
 	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
@@ -37,6 +38,18 @@ func (r Repo) ListByUser(ctx context.Context, userID uint) ([]abgabe.Abgabe, err
 	var items []abgabe.Abgabe
 	err := r.DB.WithContext(ctx).
 		Where("user_id = ?", userID).
+		Order("due_date asc").
+		Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+func (r Repo) ListByUserAndDateBefore(ctx context.Context, userID uint, date time.Time) ([]abgabe.Abgabe, error) {
+	var items []abgabe.Abgabe
+	err := r.DB.WithContext(ctx).
+		Where("user_id = ? AND date_before = ?", userID, date).
 		Order("due_date asc").
 		Find(&items).Error
 	if err != nil {

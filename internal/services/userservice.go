@@ -36,8 +36,8 @@ type UserService struct {
 	r UserRepo
 }
 
-func NewUserService(r *user.Repo) *UserService {
-	return &UserService{r: r}
+func NewUserService(r user.Repo) *UserService {
+	return &UserService{r: &r}
 }
 
 func (s *UserService) FindOrCreate(ctx context.Context, in CreateUserInput) (*models.User, bool, error) {

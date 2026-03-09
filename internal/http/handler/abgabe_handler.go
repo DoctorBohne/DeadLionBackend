@@ -11,36 +11,24 @@ import (
 	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
 	"github.com/DoctorBohne/DeadLionBackend/internal/requestctx"
+	"github.com/DoctorBohne/DeadLionBackend/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
-type CreateAbgabeInput struct {
-	Title          string      `json:"title" binding:"required"`
-	DueDate        time.Time   `json:"due_date" binding:"required"`
-	RiskAssessment abgabe.Risk `json:"risk_assessment" binding:"required"`
-	ModulID        uint        `json:"modul_id" binding:"required"`
-}
-
-type UpdateAbgabeInput struct {
-	Title          *string      `json:"title"`
-	DueDate        *time.Time   `json:"due_date"`
-	RiskAssessment *abgabe.Risk `json:"risk_assessment"`
-	ModulID        *uint        `json:"modul_id"`
-}
-
 type AbgabeService interface {
-	Create(ctx context.Context, userID uint, in CreateAbgabeInput) (*abgabe.Abgabe, error)
+	Create(ctx context.Context, userID uint, in abgabe.CreateAbgabeInput) (*abgabe.Abgabe, error)
 	Get(ctx context.Context, userID, id uint) (*abgabe.Abgabe, error)
 	List(ctx context.Context, userID uint) ([]abgabe.Abgabe, error)
-	Update(ctx context.Context, userID, id uint, in UpdateAbgabeInput) (*abgabe.Abgabe, error)
+	ListByBeforeDueDate(ctx context.Context, userID uint, beforeDueDate time.Time) ([]abgabe.Abgabe, error)
+	Update(ctx context.Context, userID, id uint, in abgabe.UpdateAbgabeInput) (*abgabe.Abgabe, error)
 }
 
 type AbgabeHandler struct {
 	abgaben AbgabeService
-	usersvc UserService
+	usersvc *services.UserService
 }
 
-func NewAbgabeHandler(abgaben AbgabeService, usersvc UserService) *AbgabeHandler {
+func NewAbgabeHandler(abgaben AbgabeService, usersvc *services.UserService) *AbgabeHandler {
 	return &AbgabeHandler{abgaben: abgaben, usersvc: usersvc}
 }
 
@@ -49,7 +37,7 @@ func (h *AbgabeHandler) Create(c *gin.Context) {
 	if !ok {
 		return
 	}
-	var in CreateAbgabeInput
+	var in abgabe.CreateAbgabeInput
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -71,7 +59,7 @@ func (h *AbgabeHandler) Update(c *gin.Context) {
 	if !ok {
 		return
 	}
-	var in UpdateAbgabeInput
+	var in abgabe.UpdateAbgabeInput
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -120,7 +108,7 @@ func (h *AbgabeHandler) resolveUser(c *gin.Context) (*models.User, bool) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return nil, false
 	}
-	in := CreateUserInput{
+	in := services.CreateUserInput{
 		Issuer:            claims.Issuer,
 		Subject:           claims.Subject,
 		Email:             claims.Email,

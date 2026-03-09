@@ -2,16 +2,17 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/DoctorBohne/DeadLionBackend/internal/abgabe"
 	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
-	"github.com/DoctorBohne/DeadLionBackend/internal/http/handler"
 )
 
 type AbgabeRepo interface {
 	Create(ctx context.Context, ab *abgabe.Abgabe) error
 	FindByID(ctx context.Context, id uint) (*abgabe.Abgabe, error)
 	ListByUser(ctx context.Context, userID uint) ([]abgabe.Abgabe, error)
+	ListByUserAndDateBefore(ctx context.Context, userID uint, date time.Time) ([]abgabe.Abgabe, error)
 	Update(ctx context.Context, ab *abgabe.Abgabe) error
 }
 
@@ -19,15 +20,20 @@ type AbgabeService struct {
 	r AbgabeRepo
 }
 
+func (s AbgabeService) ListByBeforeDueDate(ctx context.Context, userID uint, beforeDueDate time.Time) ([]abgabe.Abgabe, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewAbgabeService(r AbgabeRepo) *AbgabeService {
 	return &AbgabeService{r: r}
 }
 
-func (s AbgabeService) Create(ctx context.Context, userID uint, in handler.CreateAbgabeInput) (*abgabe.Abgabe, error) {
+func (s AbgabeService) Create(ctx context.Context, userID uint, in abgabe.CreateAbgabeInput) (*abgabe.Abgabe, error) {
 	item := &abgabe.Abgabe{
 		Title:          in.Title,
 		DueDate:        in.DueDate,
-		RiskAssessment: in.RiskAssessment,
+		RiskAssessment: abgabe.Risk(in.RiskAssessment),
 		UserID:         userID,
 		ModulID:        in.ModulID,
 	}
@@ -52,7 +58,7 @@ func (s AbgabeService) List(ctx context.Context, userID uint) ([]abgabe.Abgabe, 
 	return s.r.ListByUser(ctx, userID)
 }
 
-func (s AbgabeService) Update(ctx context.Context, userID, id uint, in handler.UpdateAbgabeInput) (*abgabe.Abgabe, error) {
+func (s AbgabeService) Update(ctx context.Context, userID, id uint, in abgabe.UpdateAbgabeInput) (*abgabe.Abgabe, error) {
 	item, err := s.r.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -67,7 +73,7 @@ func (s AbgabeService) Update(ctx context.Context, userID, id uint, in handler.U
 		item.DueDate = *in.DueDate
 	}
 	if in.RiskAssessment != nil {
-		item.RiskAssessment = *in.RiskAssessment
+		item.RiskAssessment = abgabe.Risk(*in.RiskAssessment)
 	}
 	if in.ModulID != nil {
 		item.ModulID = *in.ModulID
