@@ -48,10 +48,10 @@ func (r *TaskboardRepo) ListByTaskID(ctx context.Context, userID uint, taskID uu
 	return items, err
 }
 
-func (r *TaskboardRepo) GetByID(ctx context.Context, userID uint, taskID, id uuid.UUID) (*models.Taskboard, error) {
+func (r *TaskboardRepo) GetByID(ctx context.Context, userID uint, id uuid.UUID) (*models.Taskboard, error) {
 	var b models.Taskboard
 	err := r.scoped(ctx, userID).
-		Where("taskboards.task_id = ? AND taskboards.id = ?", taskID, id).
+		Where("taskboards.id = ?", id).
 		First(&b).Error
 	if err != nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (r *TaskboardRepo) GetByID(ctx context.Context, userID uint, taskID, id uui
 	return &b, nil
 }
 
-func (r *TaskboardRepo) Update(ctx context.Context, userID uint, taskID, id uuid.UUID, updates map[string]any) (*models.Taskboard, error) {
-	tx := r.scoped(ctx, userID).Where("taskboards.task_id = ? AND taskboards.id = ?", taskID, id)
+func (r *TaskboardRepo) Update(ctx context.Context, userID uint, id uuid.UUID, updates map[string]any) (*models.Taskboard, error) {
+	tx := r.scoped(ctx, userID).Where("taskboards.id = ?", id)
 
 	res := tx.Updates(updates)
 	if res.Error != nil {
@@ -70,11 +70,11 @@ func (r *TaskboardRepo) Update(ctx context.Context, userID uint, taskID, id uuid
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	return r.GetByID(ctx, userID, taskID, id)
+	return r.GetByID(ctx, userID, id)
 }
 
-func (r *TaskboardRepo) Delete(ctx context.Context, userID uint, taskID, id uuid.UUID) (bool, error) {
-	tx := r.scoped(ctx, userID).Where("taskboards.task_id = ? AND taskboards.id = ?", taskID, id)
+func (r *TaskboardRepo) Delete(ctx context.Context, userID uint, id uuid.UUID) (bool, error) {
+	tx := r.scoped(ctx, userID).Where("taskboards.id = ?", id)
 	res := tx.Delete(&models.Taskboard{})
 	if res.Error != nil {
 		return false, res.Error

@@ -54,7 +54,7 @@ func NewRouter(d Deps) *gin.Engine {
 	subtaskHandler := handler.NewSubtaskHandler(subtaskService)
 
 	v1.POST("/tasks/:taskId/subtasks", subtaskHandler.Create)
-	v1.GET("/subtasks", subtaskHandler.List) // ?taskid=<uuid>
+	v1.GET("/subtasks", subtaskHandler.List) // ?taskId=<uuid>
 	v1.GET("/subtasks/:id", subtaskHandler.Get)
 	v1.PATCH("/subtasks/:id", subtaskHandler.Update)
 	v1.DELETE("/subtasks/:id", subtaskHandler.Delete)
@@ -87,10 +87,11 @@ func NewRouter(d Deps) *gin.Engine {
 	taskboardHandler := handler.NewTaskboardHandler(taskboardService)
 
 	v1.POST("/tasks/:taskId/taskboards", taskboardHandler.Create)
-	v1.GET("/tasks/:taskId/taskboards", taskboardHandler.List)
-	v1.GET("/tasks/:taskId/taskboards/:id", taskboardHandler.Get)
-	v1.PATCH("/tasks/:taskId/taskboards/:id", taskboardHandler.Update)
-	v1.DELETE("/tasks/:taskId/taskboards/:id", taskboardHandler.Delete)
+	v1.GET("/taskboards", taskboardHandler.List)
+	v1.GET("/taskboards/:id", taskboardHandler.Get) //?taskId=<uuid>
+	v1.PATCH("/taskboards/:id", taskboardHandler.Update)
+	v1.DELETE("/taskboards/:id", taskboardHandler.Delete)
+
 	v1.POST("/abgaben", abgabeHandler.Create)
 	v1.GET("/abgaben", abgabeHandler.List)
 	v1.GET("/abgaben/:id", abgabeHandler.Get)

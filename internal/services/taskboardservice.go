@@ -14,9 +14,9 @@ import (
 type TaskboardRepo interface {
 	Create(ctx context.Context, userID uint, b *models.Taskboard) error
 	ListByTaskID(ctx context.Context, userID uint, taskID uuid.UUID) ([]models.Taskboard, error)
-	GetByID(ctx context.Context, userID uint, taskID, id uuid.UUID) (*models.Taskboard, error)
-	Update(ctx context.Context, userID uint, taskID, id uuid.UUID, updates map[string]any) (*models.Taskboard, error)
-	Delete(ctx context.Context, userID uint, taskID, id uuid.UUID) (bool, error)
+	GetByID(ctx context.Context, userID uint, id uuid.UUID) (*models.Taskboard, error)
+	Update(ctx context.Context, userID uint, id uuid.UUID, updates map[string]any) (*models.Taskboard, error)
+	Delete(ctx context.Context, userID uint, id uuid.UUID) (bool, error)
 }
 
 type CreateTaskboardInput struct {
@@ -37,9 +37,9 @@ type UpdateTaskboardInput struct {
 type TaskboardService interface {
 	Create(ctx context.Context, in CreateTaskboardInput) (*models.Taskboard, error)
 	List(ctx context.Context, issuer, sub string, taskID uuid.UUID) ([]models.Taskboard, error)
-	GetByID(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) (*models.Taskboard, error)
-	Update(ctx context.Context, issuer, sub string, taskID, id uuid.UUID, in UpdateTaskboardInput) (*models.Taskboard, error)
-	Delete(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) error
+	GetByID(ctx context.Context, issuer, sub string, id uuid.UUID) (*models.Taskboard, error)
+	Update(ctx context.Context, issuer, sub string, id uuid.UUID, in UpdateTaskboardInput) (*models.Taskboard, error)
+	Delete(ctx context.Context, issuer, sub string, id uuid.UUID) error
 }
 
 type taskboardService struct {
@@ -129,13 +129,13 @@ func (s *taskboardService) List(ctx context.Context, issuer, sub string, taskID 
 	return items, nil
 }
 
-func (s *taskboardService) GetByID(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) (*models.Taskboard, error) {
+func (s *taskboardService) GetByID(ctx context.Context, issuer, sub string, id uuid.UUID) (*models.Taskboard, error) {
 	uid, err := s.userID(ctx, issuer, sub)
 	if err != nil {
 		return nil, err
 	}
 
-	b, err := s.repo.GetByID(ctx, uid, taskID, id)
+	b, err := s.repo.GetByID(ctx, uid, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, custom_errors.ErrNotFound
@@ -145,7 +145,7 @@ func (s *taskboardService) GetByID(ctx context.Context, issuer, sub string, task
 	return b, nil
 }
 
-func (s *taskboardService) Update(ctx context.Context, issuer, sub string, taskID, id uuid.UUID, in UpdateTaskboardInput) (*models.Taskboard, error) {
+func (s *taskboardService) Update(ctx context.Context, issuer, sub string, id uuid.UUID, in UpdateTaskboardInput) (*models.Taskboard, error) {
 	uid, err := s.userID(ctx, issuer, sub)
 	if err != nil {
 		return nil, err
@@ -180,7 +180,7 @@ func (s *taskboardService) Update(ctx context.Context, issuer, sub string, taskI
 		return nil, errors.New("no fields to update")
 	}
 
-	b, err := s.repo.Update(ctx, uid, taskID, id, updates)
+	b, err := s.repo.Update(ctx, uid, id, updates)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, custom_errors.ErrNotFound
@@ -190,13 +190,13 @@ func (s *taskboardService) Update(ctx context.Context, issuer, sub string, taskI
 	return b, nil
 }
 
-func (s *taskboardService) Delete(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) error {
+func (s *taskboardService) Delete(ctx context.Context, issuer, sub string, id uuid.UUID) error {
 	uid, err := s.userID(ctx, issuer, sub)
 	if err != nil {
 		return err
 	}
 
-	ok, err := s.repo.Delete(ctx, uid, taskID, id)
+	ok, err := s.repo.Delete(ctx, uid, id)
 	if err != nil {
 		return err
 	}
