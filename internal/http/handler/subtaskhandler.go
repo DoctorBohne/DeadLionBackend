@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -74,8 +75,8 @@ func (h *SubtaskHandler) Create(c *gin.Context) {
 		BoardPool:   req.BoardPool,
 	})
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 			return
 		default:
@@ -92,15 +93,15 @@ func (h *SubtaskHandler) List(c *gin.Context) {
 	if !ok {
 		return
 	}
-	taskID, ok := mustTaskID(c)
+	taskID, ok := mustTaskIDQuery(c)
 	if !ok {
 		return
 	}
 
 	items, err := h.svc.List(c.Request.Context(), issuer, sub, taskID)
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 			return
 		default:
@@ -112,12 +113,16 @@ func (h *SubtaskHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
+func mustTaskIDQuery(c *gin.Context) (uuid.UUID, bool) {
+	taskID, err := uuid.Parse(c.Param("taskId"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid taskId"})
+		return uuid.Nil, false
+	}
+	return taskID, true
+}
 func (h *SubtaskHandler) Get(c *gin.Context) {
 	issuer, sub, ok := h.mustClaims(c)
-	if !ok {
-		return
-	}
-	taskID, ok := mustTaskID(c)
 	if !ok {
 		return
 	}
@@ -128,10 +133,10 @@ func (h *SubtaskHandler) Get(c *gin.Context) {
 		return
 	}
 
-	item, err := h.svc.GetByID(c.Request.Context(), issuer, sub, taskID, id)
+	item, err := h.svc.GetByID(c.Request.Context(), issuer, sub, id)
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "subtask not found"})
 			return
 		default:
@@ -151,10 +156,6 @@ type updateSubtaskReq struct {
 
 func (h *SubtaskHandler) Update(c *gin.Context) {
 	issuer, sub, ok := h.mustClaims(c)
-	if !ok {
-		return
-	}
-	taskID, ok := mustTaskID(c)
 	if !ok {
 		return
 	}
@@ -184,14 +185,14 @@ func (h *SubtaskHandler) Update(c *gin.Context) {
 		req.Title = &t
 	}
 
-	item, err := h.svc.Update(c.Request.Context(), issuer, sub, taskID, id, services.UpdateSubtaskInput{
+	item, err := h.svc.Update(c.Request.Context(), issuer, sub, id, services.UpdateSubtaskInput{
 		Title:       req.Title,
 		Description: req.Description,
 		BoardPool:   req.BoardPool,
 	})
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "subtask not found"})
 			return
 		default:
@@ -208,10 +209,6 @@ func (h *SubtaskHandler) Delete(c *gin.Context) {
 	if !ok {
 		return
 	}
-	taskID, ok := mustTaskID(c)
-	if !ok {
-		return
-	}
 
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -219,13 +216,13 @@ func (h *SubtaskHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.Delete(c.Request.Context(), issuer, sub, taskID, id); err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+	if erro := h.svc.Delete(c.Request.Context(), issuer, sub, id); erro != nil {
+		switch {
+		case errors.Is(erro, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "subtask not found"})
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": erro.Error()})
 			return
 		}
 	}

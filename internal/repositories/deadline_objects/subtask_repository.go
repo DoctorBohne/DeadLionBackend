@@ -50,10 +50,10 @@ func (r *SubtaskRepo) ListByTaskID(ctx context.Context, userID uint, taskID uuid
 	return items, err
 }
 
-func (r *SubtaskRepo) GetByID(ctx context.Context, userID uint, taskID, id uuid.UUID) (*models.Subtask, error) {
+func (r *SubtaskRepo) GetByID(ctx context.Context, userID uint, id uuid.UUID) (*models.Subtask, error) {
 	var s models.Subtask
 	err := r.scoped(ctx, userID).
-		Where("subtasks.task_id = ? AND subtasks.id = ?", taskID, id).
+		Where("subtasks.id = ?", id).
 		First(&s).Error
 	if err != nil {
 		return nil, err
@@ -61,9 +61,9 @@ func (r *SubtaskRepo) GetByID(ctx context.Context, userID uint, taskID, id uuid.
 	return &s, nil
 }
 
-func (r *SubtaskRepo) Update(ctx context.Context, userID uint, taskID, id uuid.UUID, updates map[string]any) (*models.Subtask, error) {
+func (r *SubtaskRepo) Update(ctx context.Context, userID uint, id uuid.UUID, updates map[string]any) (*models.Subtask, error) {
 	tx := r.scoped(ctx, userID).
-		Where("subtasks.task_id = ? AND subtasks.id = ?", taskID, id)
+		Where("subtasks.id = ?", id)
 
 	res := tx.Updates(updates)
 	if res.Error != nil {
@@ -73,12 +73,12 @@ func (r *SubtaskRepo) Update(ctx context.Context, userID uint, taskID, id uuid.U
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	return r.GetByID(ctx, userID, taskID, id)
+	return r.GetByID(ctx, userID, id)
 }
 
-func (r *SubtaskRepo) Delete(ctx context.Context, userID uint, taskID, id uuid.UUID) (bool, error) {
+func (r *SubtaskRepo) Delete(ctx context.Context, userID uint, id uuid.UUID) (bool, error) {
 	tx := r.scoped(ctx, userID).
-		Where("subtasks.task_id = ? AND subtasks.id = ?", taskID, id)
+		Where("subtasks.id = ?", id)
 
 	res := tx.Delete(&models.Subtask{})
 	if res.Error != nil {

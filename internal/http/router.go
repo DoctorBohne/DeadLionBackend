@@ -54,10 +54,10 @@ func NewRouter(d Deps) *gin.Engine {
 	subtaskHandler := handler.NewSubtaskHandler(subtaskService)
 
 	v1.POST("/tasks/:taskId/subtasks", subtaskHandler.Create)
-	v1.GET("/tasks/:taskId/subtasks", subtaskHandler.List)
-	v1.GET("/tasks/:taskId/subtasks/:id", subtaskHandler.Get)
-	v1.PATCH("/tasks/:taskId/subtasks/:id", subtaskHandler.Update)
-	v1.DELETE("/tasks/:taskId/subtasks/:id", subtaskHandler.Delete)
+	v1.GET("/subtasks", subtaskHandler.List) // ?taskid=<uuid>
+	v1.GET("/subtasks/:id", subtaskHandler.Get)
+	v1.PATCH("/subtasks/:id", subtaskHandler.Update)
+	v1.DELETE("/subtasks/:id", subtaskHandler.Delete)
 
 	//userboard bundle
 	userboardRepo := boards.NewUserboardRepo(d.DB)
