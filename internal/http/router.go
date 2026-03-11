@@ -24,6 +24,7 @@ func NewRouter(d Deps) *gin.Engine {
 	userRepo := user.NewUserRepo(d.DB)
 	userService := services.NewUserService(*userRepo)
 	meHandler := handler.NewMeHandler(*userService)
+
 	abgabeRepo := abgabe.NewAbgabeRepo(d.DB)
 	abgabeService := services.NewAbgabeService(*abgabeRepo)
 	abgabeHandler := handler.NewAbgabeHandler(abgabeService, userService)
@@ -96,6 +97,12 @@ func NewRouter(d Deps) *gin.Engine {
 	v1.GET("/abgaben", abgabeHandler.List)
 	v1.GET("/abgaben/:id", abgabeHandler.Get)
 	v1.PUT("/abgaben/:id", abgabeHandler.Update)
+
+	//riskcalculation bundle
+	riskService := services.NewRiskCalculatorService(abgabeRepo)
+
+	riskHandler := handler.NewRiskHandler(riskService, userRepo)
+	v1.GET("/abgaben/risklist", riskHandler.RetrieveRiskList)
 
 	return r
 }

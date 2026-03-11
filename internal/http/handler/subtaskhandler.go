@@ -121,6 +121,7 @@ func mustTaskIDQuery(c *gin.Context) (uuid.UUID, bool) {
 	}
 	return taskID, true
 }
+
 func (h *SubtaskHandler) Get(c *gin.Context) {
 	issuer, sub, ok := h.mustClaims(c)
 	if !ok {

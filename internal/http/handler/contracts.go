@@ -12,5 +12,5 @@ type RiskService interface {
 }
 
 type RiskRequest struct {
-	RequestDate time.Time `json:"requestDate,omitempty"`
+	RequestDate time.Time `json:"requestDate,omitempty" time_format:"2006-01-02"`
 }

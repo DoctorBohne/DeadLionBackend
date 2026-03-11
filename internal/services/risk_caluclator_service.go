@@ -11,33 +11,13 @@ import (
 
 type RiskCalculatorService struct {
 	repo AbgabeRepo
+	// exam repo doesn't exist yet, if, include here
 }
 
-func NewRiskCalculatorService(repo AbgabeRepo, usersvc UserLookup) *RiskCalculatorService {
+func NewRiskCalculatorService(repo AbgabeRepo) *RiskCalculatorService {
 	return &RiskCalculatorService{repo: repo}
 }
 
-/*
-Risk Item:
-
-	Prio:
-	1
-	2
-	3
-	4
-	5
-
-	Date:
-	x > 21 : 1
-	21 > x > 14 : 2
-	13 > x > 7 : 3
-	6 > x > 3 : 4
-	2 > x > 0 : 5
-
-	weight: prio = 2; date = 3
-
-	if due date < 2 days -> ramped up
-*/
 func (s *RiskCalculatorService) CalculateRiskList(ctx context.Context, userID uint, requestDate time.Time) ([]models.RiskItem, error) {
 
 	var list []abgabe.Abgabe
@@ -96,7 +76,7 @@ func (s *RiskCalculatorService) calculateRiskScore(item *models.RiskItem) error 
 
 func (s *RiskCalculatorService) extractUrgencyScore(date time.Time) (int, error) {
 	if date.IsZero() {
-		return 0, errors.New("No Date provided")
+		return 0, errors.New("no Date provided")
 	}
 	duration := date.Sub(time.Now())
 	days := int(duration.Hours() / 24)
