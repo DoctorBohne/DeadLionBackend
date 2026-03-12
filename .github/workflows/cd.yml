@@ -17,7 +17,7 @@ jobs:
           go-version: '1.24.3'
 
       - name: Build for Linux
-        run: GOOS=linux GOARCH=amd64 go build -o backend-bin main.go
+        run: GOOS=linux GOARCH=amd64 go build -o backend-bin ./cmd/server
 
       - name: Transfer binary (SCP)
         uses: appleboy/scp-action@v0.1.7
