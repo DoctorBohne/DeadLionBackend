@@ -8,6 +8,7 @@ import (
 	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repo struct {
@@ -18,9 +19,9 @@ func NewUserRepo(db *gorm.DB) *Repo {
 	return &Repo{db}
 }
 
-func (u Repo) FindByIssuerSub(ctx context.Context, issuer, sub string) (*models.User, error) {
+func (r *Repo) FindByIssuerSub(ctx context.Context, issuer, sub string) (*models.User, error) {
 	var us models.User
-	err := u.DB.WithContext(ctx).
+	err := r.DB.WithContext(ctx).
 		Where("issuer = ? AND sub = ?", issuer, sub).
 		First(&us).Error
 
@@ -33,8 +34,8 @@ func (u Repo) FindByIssuerSub(ctx context.Context, issuer, sub string) (*models.
 	return &us, nil
 }
 
-func (u Repo) Create(ctx context.Context, user *models.User) error {
-	return u.DB.WithContext(ctx).Create(user).Error
+func (r *Repo) Create(ctx context.Context, user *models.User) error {
+	return r.DB.WithContext(ctx).Create(user).Error
 }
 
 func (r *Repo) MarkOnboardingCompleted(ctx context.Context, issuer, sub string) error {
@@ -209,4 +210,33 @@ func (r *Repo) UpdateGivenAndFamilyNameByIssuerSub(ctx context.Context, issuer, 
 		return custom_errors.ErrNotFound
 	}
 	return nil
+}
+
+func (r *Repo) FindOrCreateByIssuerSub(ctx context.Context, user *models.User) (*models.User, bool, error) {
+	res := r.DB.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "issuer"},
+				{Name: "sub"},
+			},
+			DoNothing: true,
+		}).
+		Create(user)
+
+	if res.Error != nil {
+		return nil, false, res.Error
+	}
+	if res.RowsAffected == 1 {
+		return user, true, nil
+	}
+
+	var existing models.User
+	err := r.DB.WithContext(ctx).
+		Where("issuer = ? AND sub = ?", user.Issuer, user.Sub).
+		First(&existing).Error
+	if err != nil {
+		return nil, false, err
+	}
+
+	return &existing, false, nil
 }
