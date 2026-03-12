@@ -25,10 +25,10 @@ type AbgabeService interface {
 
 type AbgabeHandler struct {
 	abgaben AbgabeService
-	usersvc *services.UserService
+	usersvc UserService
 }
 
-func NewAbgabeHandler(abgaben AbgabeService, usersvc *services.UserService) *AbgabeHandler {
+func NewAbgabeHandler(abgaben AbgabeService, usersvc UserService) *AbgabeHandler {
 	return &AbgabeHandler{abgaben: abgaben, usersvc: usersvc}
 }
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
+	"github.com/DoctorBohne/DeadLionBackend/internal/services"
 )
 
 type RiskService interface {
@@ -13,4 +14,8 @@ type RiskService interface {
 
 type RiskRequest struct {
 	RequestDate time.Time `json:"requestDate,omitempty" time_format:"2006-01-02"`
+}
+
+type UserService interface {
+	FindOrCreate(ctx context.Context, in services.CreateUserInput) (*models.User, bool, error)
 }

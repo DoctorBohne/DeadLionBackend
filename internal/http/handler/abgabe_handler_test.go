@@ -12,6 +12,7 @@ import (
 	"github.com/DoctorBohne/DeadLionBackend/internal/abgabe"
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
 	"github.com/DoctorBohne/DeadLionBackend/internal/requestctx"
+	"github.com/DoctorBohne/DeadLionBackend/internal/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -21,18 +22,23 @@ type stubUserService struct {
 	err  error
 }
 
-func (s stubUserService) FindOrCreate(ctx context.Context, in CreateUserInput) (*models.User, bool, error) {
+func (s stubUserService) FindOrCreate(ctx context.Context, in services.CreateUserInput) (*models.User, bool, error) {
 	return s.user, false, s.err
 }
 
 type stubAbgabeService struct {
-	createFn func(ctx context.Context, userID uint, in CreateAbgabeInput) (*abgabe.Abgabe, error)
+	createFn func(ctx context.Context, userID uint, in abgabe.CreateAbgabeInput) (*abgabe.Abgabe, error)
 	getFn    func(ctx context.Context, userID, id uint) (*abgabe.Abgabe, error)
 	listFn   func(ctx context.Context, userID uint) ([]abgabe.Abgabe, error)
-	updateFn func(ctx context.Context, userID, id uint, in UpdateAbgabeInput) (*abgabe.Abgabe, error)
+	updateFn func(ctx context.Context, userID, id uint, in abgabe.UpdateAbgabeInput) (*abgabe.Abgabe, error)
 }
 
-func (s stubAbgabeService) Create(ctx context.Context, userID uint, in CreateAbgabeInput) (*abgabe.Abgabe, error) {
+func (s stubAbgabeService) ListByBeforeDueDate(ctx context.Context, userID uint, beforeDueDate time.Time) ([]abgabe.Abgabe, error) {
+	return nil, nil
+	//probably needs fixing xd
+}
+
+func (s stubAbgabeService) Create(ctx context.Context, userID uint, in abgabe.CreateAbgabeInput) (*abgabe.Abgabe, error) {
 	return s.createFn(ctx, userID, in)
 }
 
@@ -44,7 +50,7 @@ func (s stubAbgabeService) List(ctx context.Context, userID uint) ([]abgabe.Abga
 	return s.listFn(ctx, userID)
 }
 
-func (s stubAbgabeService) Update(ctx context.Context, userID, id uint, in UpdateAbgabeInput) (*abgabe.Abgabe, error) {
+func (s stubAbgabeService) Update(ctx context.Context, userID, id uint, in abgabe.UpdateAbgabeInput) (*abgabe.Abgabe, error) {
 	return s.updateFn(ctx, userID, id, in)
 }
 
@@ -64,13 +70,13 @@ func TestAbgabeHandlerCreateSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	expectedDueDate := time.Date(2025, 6, 2, 9, 30, 0, 0, time.UTC)
 	var gotUserID uint
-	var gotInput CreateAbgabeInput
+	var gotInput abgabe.CreateAbgabeInput
 
 	abService := stubAbgabeService{
-		createFn: func(ctx context.Context, userID uint, in CreateAbgabeInput) (*abgabe.Abgabe, error) {
+		createFn: func(ctx context.Context, userID uint, in abgabe.CreateAbgabeInput) (*abgabe.Abgabe, error) {
 			gotUserID = userID
 			gotInput = in
-			return &abgabe.Abgabe{Title: in.Title, DueDate: in.DueDate, RiskAssessment: in.RiskAssessment, UserID: userID, ModulID: in.ModulID}, nil
+			return &abgabe.Abgabe{Title: in.Title, DueDate: in.DueDate, RiskAssessment: abgabe.Risk(in.RiskAssessment), UserID: userID, ModulID: in.ModulID}, nil
 		},
 	}
 	userService := stubUserService{user: &models.User{Model: gorm.Model{ID: 42}}}
