@@ -29,7 +29,7 @@ func main() {
 	if autoMigrate == "" {
 		autoMigrate = "true"
 	}
-	if err := db.Migrate(gdb); err != nil {
+	if err = db.Migrate(gdb); err != nil {
 		log.Fatalf("DB migrate failed: %v", err)
 	}
 	issuer := mustEnv("ISS")
