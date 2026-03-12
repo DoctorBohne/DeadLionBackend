@@ -28,7 +28,7 @@ func (s *RiskCalculatorService) CalculateRiskList(ctx context.Context, userID ui
 			return nil, err
 		}
 	} else {
-		list, err = s.repo.ListByUserAndDateBefore(ctx, userID, requestDate)
+		list, err = s.repo.ListByUserAndDateBeforeFromNow(ctx, userID, time.Now(), requestDate)
 		if err != nil {
 			return nil, err
 		}

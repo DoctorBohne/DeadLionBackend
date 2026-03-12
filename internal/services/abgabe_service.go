@@ -14,6 +14,7 @@ type AbgabeRepo interface {
 	ListByUser(ctx context.Context, userID uint) ([]abgabe.Abgabe, error)
 	ListByUserAndDateBefore(ctx context.Context, userID uint, date time.Time) ([]abgabe.Abgabe, error)
 	Update(ctx context.Context, ab *abgabe.Abgabe) error
+	ListByUserAndDateBeforeFromNow(ctx context.Context, userID uint, now, requestDate time.Time) ([]abgabe.Abgabe, error)
 }
 
 type AbgabeService struct {
