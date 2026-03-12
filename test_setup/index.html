@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Clerk Headless Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 500px; }
+        #token-display { 
+            display: none; background: #222; color: #00ff00; 
+            padding: 15px; margin-top: 20px; word-break: break-all; 
+            font-family: monospace; font-size: 13px;
+        }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>Clerk Login (Headless)</h2>
+        <div id="status">Initialisiere...</div>
+        
+        <div id="auth-controls" style="margin-top: 20px;">
+            </div>
+
+        <div id="token-display">
+            <strong>Dein Session Token:</strong>
+            <p id="token-value"></p>
+        </div>
+    </div>
+
+    <script
+        async
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_Y3VkZGx5LWh1bXBiYWNrLTcwLmNsZXJrLmFjY291bnRzLmRldiQ" 
+        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+        type="text/javascript">
+    </script>
+
+    <script>
+        window.addEventListener('load', async function() {
+            // Warten bis Clerk geladen ist
+            const interval = setInterval(async () => {
+                if (typeof Clerk !== 'undefined') {
+                    clearInterval(interval);
+                    renderApp();
+                }
+            }, 100);
+        });
+
+        async function renderApp() {
+            const status = document.getElementById('status');
+            const controls = document.getElementById('auth-controls');
+
+            try {
+                // WICHTIG: Wir laden Clerk OHNE spezielle UI-Optionen
+                await Clerk.load();
+
+                if (Clerk.user) {
+                    status.innerText = "Eingeloggt als: " + Clerk.user.primaryEmailAddress;
+                    
+                    // Token anzeigen
+                    const token = await Clerk.session.getToken();
+                    document.getElementById('token-value').innerText = token;
+                    document.getElementById('token-display').style.display = 'block';
+
+                    // Logout Button
+                    controls.innerHTML = '<button class="btn" onclick="Clerk.signOut()">Ausloggen</button>';
+                } else {
+                    status.innerText = "Nicht eingeloggt.";
+                    // Redirect-Lösung: Wir leiten den User auf die Clerk-Seite weiter
+                    controls.innerHTML = '<button class="btn" onclick="redirectToSignIn()">Zum Login weiterleiten</button>';
+                }
+            } catch (err) {
+                status.innerText = "Fehler: " + err.message;
+            }
+        }
+
+        function redirectToSignIn() {
+            // Dies nutzt die von Clerk gehostete Seite, keine lokale UI nötig!
+            Clerk.redirectToSignIn();
+        }
+    </script>
+</body>
+</html>
