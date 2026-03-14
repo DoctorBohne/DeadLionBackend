@@ -1,9 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: deadlion-backend:local
+    image: ghcr.io/doctorbohne/deadlion-backend:latest
     ports:
       - "8081:8080"
     env_file:
