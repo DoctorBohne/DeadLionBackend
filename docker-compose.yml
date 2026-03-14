@@ -4,7 +4,7 @@ services:
     ports:
       - "8081:8080"
     env_file:
-      - .env
+      - /opt/deadlion-secrets/.env
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"

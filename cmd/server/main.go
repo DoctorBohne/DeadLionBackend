@@ -32,8 +32,8 @@ func main() {
 	if err = db.Migrate(gdb); err != nil {
 		log.Fatalf("DB migrate failed: %v", err)
 	}
-	issuer := mustEnv("ISS")
-	jwksURL := issuer + "/protocol/openid-connect/certs"
+	issuer := mustEnv("CLERK_ISS_URL")
+	jwksURL := mustEnv("CLERK_JWKS_URL")
 
 	verifier, err := auth.NewVerifier(jwksURL, issuer)
 	if err != nil {
