@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
@@ -13,8 +14,8 @@ type MeHandler struct {
 	usersvc services.UserService
 }
 
-func NewMeHandler(usersvc *services.UserService) *MeHandler {
-	return &MeHandler{*usersvc}
+func NewMeHandler(usersvc services.UserService) *MeHandler {
+	return &MeHandler{usersvc}
 }
 
 func (m *MeHandler) Me(c *gin.Context) {
@@ -66,11 +67,11 @@ func (m *MeHandler) UpdateOnboardingComplete(c *gin.Context) {
 
 	err := m.usersvc.MarkOnboardingComplete(c.Request.Context(), issuer, sub)
 	if err != nil {
-		switch err {
-		case custom_errors.ErrAlreadBoarded:
+		switch {
+		case errors.Is(err, custom_errors.ErrAlreadBoarded):
 			c.JSON(409, gin.H{"error": "onboarding already complete"})
 			return
-		case custom_errors.ErrNotFound:
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.JSON(404, gin.H{"error": "user not found"})
 			return
 		default:

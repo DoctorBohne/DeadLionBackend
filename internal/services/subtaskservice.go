@@ -15,9 +15,9 @@ import (
 type SubtaskRepo interface {
 	Create(ctx context.Context, userID uint, s *models.Subtask) error
 	ListByTaskID(ctx context.Context, userID uint, taskID uuid.UUID) ([]models.Subtask, error)
-	GetByID(ctx context.Context, userID uint, taskID, id uuid.UUID) (*models.Subtask, error)
-	Update(ctx context.Context, userID uint, taskID, id uuid.UUID, updates map[string]any) (*models.Subtask, error)
-	Delete(ctx context.Context, userID uint, taskID, id uuid.UUID) (bool, error)
+	GetByID(ctx context.Context, userID uint, id uuid.UUID) (*models.Subtask, error)
+	Update(ctx context.Context, userID uint, id uuid.UUID, updates map[string]any) (*models.Subtask, error)
+	Delete(ctx context.Context, userID uint, id uuid.UUID) (bool, error)
 }
 
 type CreateSubtaskInput struct {
@@ -38,9 +38,9 @@ type UpdateSubtaskInput struct {
 type SubtaskService interface {
 	Create(ctx context.Context, in CreateSubtaskInput) (*models.Subtask, error)
 	List(ctx context.Context, issuer, sub string, taskID uuid.UUID) ([]models.Subtask, error)
-	GetByID(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) (*models.Subtask, error)
-	Update(ctx context.Context, issuer, sub string, taskID, id uuid.UUID, in UpdateSubtaskInput) (*models.Subtask, error)
-	Delete(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) error
+	GetByID(ctx context.Context, issuer, sub string, id uuid.UUID) (*models.Subtask, error)
+	Update(ctx context.Context, issuer, sub string, id uuid.UUID, in UpdateSubtaskInput) (*models.Subtask, error)
+	Delete(ctx context.Context, issuer, sub string, id uuid.UUID) error
 }
 
 type subtaskService struct {
@@ -119,13 +119,13 @@ func (s *subtaskService) List(ctx context.Context, issuer, sub string, taskID uu
 	return items, nil
 }
 
-func (s *subtaskService) GetByID(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) (*models.Subtask, error) {
+func (s *subtaskService) GetByID(ctx context.Context, issuer, sub string, id uuid.UUID) (*models.Subtask, error) {
 	uid, err := s.userID(ctx, issuer, sub)
 	if err != nil {
 		return nil, err
 	}
 
-	it, err := s.repo.GetByID(ctx, uid, taskID, id)
+	it, err := s.repo.GetByID(ctx, uid, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, custom_errors.ErrNotFound
@@ -135,7 +135,7 @@ func (s *subtaskService) GetByID(ctx context.Context, issuer, sub string, taskID
 	return it, nil
 }
 
-func (s *subtaskService) Update(ctx context.Context, issuer, sub string, taskID, id uuid.UUID, in UpdateSubtaskInput) (*models.Subtask, error) {
+func (s *subtaskService) Update(ctx context.Context, issuer, sub string, id uuid.UUID, in UpdateSubtaskInput) (*models.Subtask, error) {
 	uid, err := s.userID(ctx, issuer, sub)
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (s *subtaskService) Update(ctx context.Context, issuer, sub string, taskID,
 		return nil, errors.New("no fields to update")
 	}
 
-	it, err := s.repo.Update(ctx, uid, taskID, id, updates)
+	it, err := s.repo.Update(ctx, uid, id, updates)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, custom_errors.ErrNotFound
@@ -174,13 +174,13 @@ func (s *subtaskService) Update(ctx context.Context, issuer, sub string, taskID,
 	return it, nil
 }
 
-func (s *subtaskService) Delete(ctx context.Context, issuer, sub string, taskID, id uuid.UUID) error {
+func (s *subtaskService) Delete(ctx context.Context, issuer, sub string, id uuid.UUID) error {
 	uid, err := s.userID(ctx, issuer, sub)
 	if err != nil {
 		return err
 	}
 
-	ok, err := s.repo.Delete(ctx, uid, taskID, id)
+	ok, err := s.repo.Delete(ctx, uid, id)
 	if err != nil {
 		return err
 	}

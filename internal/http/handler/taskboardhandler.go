@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -74,8 +75,8 @@ func (h *TaskboardHandler) Create(c *gin.Context) {
 		Status:      req.Status,
 	})
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 			return
 		default:
@@ -92,15 +93,15 @@ func (h *TaskboardHandler) List(c *gin.Context) {
 	if !ok {
 		return
 	}
-	taskID, ok := mustTaskID(c)
+	taskID, ok := mustTaskIDQuery(c)
 	if !ok {
 		return
 	}
 
 	items, err := h.svc.List(c.Request.Context(), issuer, sub, taskID)
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "task not found"})
 			return
 		default:
@@ -117,10 +118,6 @@ func (h *TaskboardHandler) Get(c *gin.Context) {
 	if !ok {
 		return
 	}
-	taskID, ok := mustTaskID(c)
-	if !ok {
-		return
-	}
 
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -128,10 +125,10 @@ func (h *TaskboardHandler) Get(c *gin.Context) {
 		return
 	}
 
-	board, err := h.svc.GetByID(c.Request.Context(), issuer, sub, taskID, id)
+	board, err := h.svc.GetByID(c.Request.Context(), issuer, sub, id)
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "taskboard not found"})
 			return
 		default:
@@ -154,10 +151,6 @@ func (h *TaskboardHandler) Update(c *gin.Context) {
 	if !ok {
 		return
 	}
-	taskID, ok := mustTaskID(c)
-	if !ok {
-		return
-	}
 
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -166,7 +159,7 @@ func (h *TaskboardHandler) Update(c *gin.Context) {
 	}
 
 	var req updateTaskboardReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err = c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -184,14 +177,14 @@ func (h *TaskboardHandler) Update(c *gin.Context) {
 		req.Title = &t
 	}
 
-	board, err := h.svc.Update(c.Request.Context(), issuer, sub, taskID, id, services.UpdateTaskboardInput{
+	board, err := h.svc.Update(c.Request.Context(), issuer, sub, id, services.UpdateTaskboardInput{
 		Title:       req.Title,
 		Description: req.Description,
 		Status:      req.Status,
 	})
 	if err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "taskboard not found"})
 			return
 		default:
@@ -208,10 +201,6 @@ func (h *TaskboardHandler) Delete(c *gin.Context) {
 	if !ok {
 		return
 	}
-	taskID, ok := mustTaskID(c)
-	if !ok {
-		return
-	}
 
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -219,9 +208,9 @@ func (h *TaskboardHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.Delete(c.Request.Context(), issuer, sub, taskID, id); err != nil {
-		switch err {
-		case custom_errors.ErrNotFound:
+	if err = h.svc.Delete(c.Request.Context(), issuer, sub, id); err != nil {
+		switch {
+		case errors.Is(err, custom_errors.ErrNotFound):
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "taskboard not found"})
 			return
 		default:
