@@ -14,7 +14,6 @@ type Claims struct {
 	GivenName         string
 	FamilyName        string
 	ExpUnix           int64
-	Scope             string
 }
 
 func WithClaims(ctx context.Context, c Claims) context.Context {

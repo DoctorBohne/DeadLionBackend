@@ -2,9 +2,7 @@ package services
 
 import (
 	"context"
-	"errors"
 
-	"github.com/DoctorBohne/DeadLionBackend/internal/custom_errors"
 	"github.com/DoctorBohne/DeadLionBackend/internal/models"
 	"github.com/DoctorBohne/DeadLionBackend/internal/repositories/user"
 )
@@ -30,6 +28,7 @@ type UserRepo interface {
 	SetEmailVerifiedByIssuerSub(ctx context.Context, issuer, sub string, verified bool) error
 	UpdatePreferredUsernameByIssuerSub(ctx context.Context, issuer, sub, preferredUsername string) error
 	UpdateGivenAndFamilyNameByIssuerSub(ctx context.Context, issuer, sub, givenName, familyName string) error
+	FindOrCreateByIssuerSub(ctx context.Context, user *models.User) (*models.User, bool, error)
 }
 
 type UserService struct {
@@ -41,14 +40,6 @@ func NewUserService(r *user.Repo) *UserService {
 }
 
 func (s *UserService) FindOrCreate(ctx context.Context, in CreateUserInput) (*models.User, bool, error) {
-	u, err := s.r.FindByIssuerSub(ctx, in.Issuer, in.Subject)
-	if err == nil {
-		return u, false, nil
-	}
-	if !errors.Is(err, custom_errors.ErrNotFound) {
-		return nil, false, err
-	}
-
 	userC := &models.User{
 		Sub:               in.Subject,
 		Issuer:            in.Issuer,
@@ -60,10 +51,11 @@ func (s *UserService) FindOrCreate(ctx context.Context, in CreateUserInput) (*mo
 		FamilyName:        in.FamilyName,
 	}
 
-	if err := s.r.Create(ctx, userC); err != nil {
+	userR, created, err := s.r.FindOrCreateByIssuerSub(ctx, userC)
+	if err != nil {
 		return nil, false, err
 	}
-	return userC, true, nil
+	return userR, created, err
 }
 
 func (s *UserService) MarkOnboardingComplete(ctx context.Context, issuer, sub string) error {
