@@ -1,0 +1,1248 @@
+openapi: "3.0.3"
+info:
+  title: DeadLion Backend API
+  description: |
+    REST API for the DeadLion task-management backend.
+
+    All endpoints under `/api/v1` require a valid JWT Bearer token issued by the
+    configured OpenID Connect provider.  Pass the token via the
+    `Authorization: Bearer <token>` header.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: health
+    description: Service health check
+  - name: me
+    description: Authenticated user profile and onboarding
+  - name: tasks
+    description: Task management
+  - name: subtasks
+    description: Subtasks belonging to a task
+  - name: userboards
+    description: User-level Kanban boards
+  - name: boardpools
+    description: Swimlane pools inside a user board
+  - name: taskboards
+    description: Task-specific Kanban boards
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ─── Shared ──────────────────────────────────────────────────────────────
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "resource not found"
+
+    # ─── User ────────────────────────────────────────────────────────────────
+
+    User:
+      type: object
+      properties:
+        ID:
+          type: integer
+          example: 1
+        Sub:
+          type: string
+          description: JWT subject claim
+          example: "abc123"
+        Issuer:
+          type: string
+          description: JWT issuer claim
+          example: "https://auth.example.com/realms/myrealm"
+        EmailVerified:
+          type: boolean
+          example: true
+        Name:
+          type: string
+          example: "Jane Doe"
+        PreferredUsername:
+          type: string
+          example: "janedoe"
+        GivenName:
+          type: string
+          example: "Jane"
+        FamilyName:
+          type: string
+          example: "Doe"
+        Email:
+          type: string
+          format: email
+          example: "jane.doe@example.com"
+        OnboardingCompleted:
+          type: boolean
+          example: false
+        CreatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+        UpdatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    # ─── Task ────────────────────────────────────────────────────────────────
+
+    Task:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        UserID:
+          type: integer
+          example: 1
+        Title:
+          type: string
+          example: "Implement login page"
+        Description:
+          type: string
+          nullable: true
+          example: "Build the login page with OAuth2 support"
+        Risk:
+          type: string
+          example: "medium"
+        Priority:
+          type: string
+          example: "high"
+        PriorityRank:
+          type: string
+          example: "1"
+        IsFinished:
+          type: string
+          example: "false"
+        BoardPool:
+          type: integer
+          example: 1
+        EstimateMinutes:
+          type: integer
+          example: 120
+        SpendMinutes:
+          type: integer
+          example: 90
+        DueAt:
+          type: string
+          format: date-time
+          example: "2024-12-31T23:59:59Z"
+        CreatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+        UpdatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - boardPool
+        - estimateMinutes
+        - spendMinutes
+        - dueAt
+      properties:
+        title:
+          type: string
+          example: "Implement login page"
+        description:
+          type: string
+          nullable: true
+          example: "Build the login page with OAuth2 support"
+        risk:
+          type: string
+          example: "medium"
+        priority:
+          type: string
+          example: "high"
+        priorityRank:
+          type: string
+          example: "1"
+        isFinished:
+          type: string
+          example: "false"
+        boardPool:
+          type: integer
+          example: 1
+        estimateMinutes:
+          type: integer
+          example: 120
+        spendMinutes:
+          type: integer
+          example: 0
+        dueAt:
+          type: string
+          format: date-time
+          description: Must be an RFC 3339 timestamp
+          example: "2024-12-31T23:59:59Z"
+
+    UpdateTaskRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        title:
+          type: string
+          example: "Implement login page (revised)"
+        description:
+          type: string
+          nullable: true
+          example: "Build the login page with OAuth2 support"
+        risk:
+          type: string
+          example: "low"
+        priority:
+          type: string
+          example: "medium"
+        priorityRank:
+          type: string
+          example: "2"
+        isFinished:
+          type: string
+          example: "true"
+        boardPool:
+          type: integer
+          example: 2
+        estimateMinutes:
+          type: integer
+          example: 150
+        spendMinutes:
+          type: integer
+          example: 120
+        dueAt:
+          type: string
+          format: date-time
+          description: Must be an RFC 3339 timestamp
+          example: "2025-01-15T23:59:59Z"
+
+    # ─── Subtask ─────────────────────────────────────────────────────────────
+
+    Subtask:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        TaskID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        Title:
+          type: string
+          example: "Write unit tests"
+        Description:
+          type: string
+          nullable: true
+          example: "Cover all edge cases"
+        BoardPool:
+          type: integer
+          example: 1
+        CreatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+        UpdatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    CreateSubtaskRequest:
+      type: object
+      required:
+        - title
+        - boardPool
+      properties:
+        title:
+          type: string
+          example: "Write unit tests"
+        description:
+          type: string
+          nullable: true
+          example: "Cover all edge cases"
+        boardPool:
+          type: integer
+          example: 1
+
+    UpdateSubtaskRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        title:
+          type: string
+          example: "Write unit and integration tests"
+        description:
+          type: string
+          nullable: true
+          example: "Cover all edge cases and integration points"
+        boardPool:
+          type: integer
+          example: 2
+
+    # ─── Userboard ───────────────────────────────────────────────────────────
+
+    Userboard:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        UserID:
+          type: integer
+          example: 1
+        Title:
+          type: string
+          example: "Sprint 42"
+        Description:
+          type: string
+          nullable: true
+          example: "Tasks for the current sprint"
+        CreatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+        UpdatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    CreateUserboardRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          example: "Sprint 42"
+        description:
+          type: string
+          nullable: true
+          example: "Tasks for the current sprint"
+
+    UpdateUserboardRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        title:
+          type: string
+          example: "Sprint 43"
+        description:
+          type: string
+          nullable: true
+          example: "Tasks for the next sprint"
+
+    # ─── BoardPool ───────────────────────────────────────────────────────────
+
+    BoardPool:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440003"
+        BoardID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        Title:
+          type: string
+          example: "In Progress"
+        Color:
+          type: string
+          description: Hex color code (without leading `#`)
+          example: "ff5733"
+        Position:
+          type: integer
+          example: 1
+        CreatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+        UpdatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    CreateBoardPoolRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          example: "In Progress"
+        color:
+          type: string
+          description: Hex color code (without leading `#`)
+          example: "ff5733"
+        position:
+          type: integer
+          example: 1
+
+    UpdateBoardPoolRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        title:
+          type: string
+          example: "Blocked"
+        color:
+          type: string
+          description: Hex color code (without leading `#`)
+          example: "cc0000"
+        position:
+          type: integer
+          example: 2
+
+    # ─── Taskboard ───────────────────────────────────────────────────────────
+
+    Taskboard:
+      type: object
+      properties:
+        ID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440004"
+        TaskID:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        Title:
+          type: string
+          example: "Backend"
+        Description:
+          type: string
+          nullable: true
+          example: "Backend tasks"
+        Status:
+          type: string
+          example: "todo"
+        CreatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+        UpdatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00Z"
+
+    CreateTaskboardRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          example: "Backend"
+        description:
+          type: string
+          nullable: true
+          example: "Backend tasks"
+        status:
+          type: string
+          example: "todo"
+
+    UpdateTaskboardRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        title:
+          type: string
+          example: "Backend (revised)"
+        description:
+          type: string
+          nullable: true
+          example: "Updated backend tasks"
+        status:
+          type: string
+          example: "in_progress"
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "unauthorized"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "resource not found"
+
+    BadRequest:
+      description: Invalid request body or parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "title must not be empty"
+
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "internal server error"
+
+  parameters:
+    pathId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the resource
+
+    pathTaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the parent task
+
+    pathBoardId:
+      name: boardId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the parent user board
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ─── Health ────────────────────────────────────────────────────────────────
+
+  /healthz:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: Returns `{"status":"ok"}` when the service is running.
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  # ─── Me ────────────────────────────────────────────────────────────────────
+
+  /api/v1/me:
+    get:
+      tags:
+        - me
+      summary: Get or create the current user
+      description: |
+        Looks up the user matching the JWT claims.  
+        Creates a new user record on first login and returns HTTP 201;
+        returns HTTP 200 on subsequent calls.
+      responses:
+        "200":
+          description: Existing user returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "201":
+          description: New user created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/me/onboardingcomplete:
+    post:
+      tags:
+        - me
+      summary: Mark onboarding as complete
+      description: Sets `onboardingCompleted = true` for the current user. Can only be called once.
+      responses:
+        "200":
+          description: Onboarding marked as complete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  onboardingComplete:
+                    type: boolean
+                    example: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Onboarding was already completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "onboarding already complete"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ─── Tasks ─────────────────────────────────────────────────────────────────
+
+  /api/v1/tasks:
+    post:
+      tags:
+        - tasks
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task:
+                    $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      tags:
+        - tasks
+      summary: List tasks
+      description: Returns all tasks belonging to the authenticated user. Optionally filter by `boardPool`.
+      parameters:
+        - name: boardPool
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter tasks by board-pool number
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/tasks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/pathId"
+    get:
+      tags:
+        - tasks
+      summary: Get a task by ID
+      responses:
+        "200":
+          description: Task found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task:
+                    $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - tasks
+      summary: Update a task
+      description: Partially updates a task. At least one field must be supplied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task:
+                    $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - tasks
+      summary: Delete a task
+      responses:
+        "204":
+          description: Task deleted (no content)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ─── Subtasks ──────────────────────────────────────────────────────────────
+
+  /api/v1/tasks/{taskId}/subtasks:
+    parameters:
+      - $ref: "#/components/parameters/pathTaskId"
+    post:
+      tags:
+        - subtasks
+      summary: Create a subtask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubtaskRequest"
+      responses:
+        "201":
+          description: Subtask created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subtask:
+                    $ref: "#/components/schemas/Subtask"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      tags:
+        - subtasks
+      summary: List subtasks for a task
+      responses:
+        "200":
+          description: List of subtasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Subtask"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/tasks/{taskId}/subtasks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/pathTaskId"
+      - $ref: "#/components/parameters/pathId"
+    get:
+      tags:
+        - subtasks
+      summary: Get a subtask by ID
+      responses:
+        "200":
+          description: Subtask found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subtask:
+                    $ref: "#/components/schemas/Subtask"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - subtasks
+      summary: Update a subtask
+      description: Partially updates a subtask. At least one field must be supplied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSubtaskRequest"
+      responses:
+        "200":
+          description: Subtask updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subtask:
+                    $ref: "#/components/schemas/Subtask"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - subtasks
+      summary: Delete a subtask
+      responses:
+        "204":
+          description: Subtask deleted (no content)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ─── Userboards ────────────────────────────────────────────────────────────
+
+  /api/v1/userboard:
+    post:
+      tags:
+        - userboards
+      summary: Create a user board
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserboardRequest"
+      responses:
+        "201":
+          description: User board created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userboard:
+                    $ref: "#/components/schemas/Userboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags:
+        - userboards
+      summary: List user boards
+      description: Returns all user boards belonging to the authenticated user.
+      responses:
+        "200":
+          description: List of user boards
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Userboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/userboard/{id}:
+    parameters:
+      - $ref: "#/components/parameters/pathId"
+    get:
+      tags:
+        - userboards
+      summary: Get a user board by ID
+      responses:
+        "200":
+          description: User board found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userboard:
+                    $ref: "#/components/schemas/Userboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - userboards
+      summary: Update a user board
+      description: Partially updates a user board. At least one field must be supplied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserboardRequest"
+      responses:
+        "200":
+          description: User board updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userboard:
+                    $ref: "#/components/schemas/Userboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - userboards
+      summary: Delete a user board
+      responses:
+        "204":
+          description: User board deleted (no content)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ─── BoardPools ────────────────────────────────────────────────────────────
+
+  /api/v1/boards/{boardId}/pools:
+    parameters:
+      - $ref: "#/components/parameters/pathBoardId"
+    post:
+      tags:
+        - boardpools
+      summary: Create a board pool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBoardPoolRequest"
+      responses:
+        "201":
+          description: Board pool created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  boardpool:
+                    $ref: "#/components/schemas/BoardPool"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags:
+        - boardpools
+      summary: List board pools for a user board
+      responses:
+        "200":
+          description: List of board pools
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BoardPool"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/boards/{boardId}/pools/{id}:
+    parameters:
+      - $ref: "#/components/parameters/pathBoardId"
+      - $ref: "#/components/parameters/pathId"
+    get:
+      tags:
+        - boardpools
+      summary: Get a board pool by ID
+      responses:
+        "200":
+          description: Board pool found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  boardpool:
+                    $ref: "#/components/schemas/BoardPool"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - boardpools
+      summary: Update a board pool
+      description: Partially updates a board pool. At least one field must be supplied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBoardPoolRequest"
+      responses:
+        "200":
+          description: Board pool updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  boardpool:
+                    $ref: "#/components/schemas/BoardPool"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - boardpools
+      summary: Delete a board pool
+      responses:
+        "204":
+          description: Board pool deleted (no content)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ─── Taskboards ────────────────────────────────────────────────────────────
+
+  /api/v1/tasks/{taskId}/taskboards:
+    parameters:
+      - $ref: "#/components/parameters/pathTaskId"
+    post:
+      tags:
+        - taskboards
+      summary: Create a task board
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskboardRequest"
+      responses:
+        "201":
+          description: Task board created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskboard:
+                    $ref: "#/components/schemas/Taskboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags:
+        - taskboards
+      summary: List task boards for a task
+      responses:
+        "200":
+          description: List of task boards
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Taskboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/tasks/{taskId}/taskboards/{id}:
+    parameters:
+      - $ref: "#/components/parameters/pathTaskId"
+      - $ref: "#/components/parameters/pathId"
+    get:
+      tags:
+        - taskboards
+      summary: Get a task board by ID
+      responses:
+        "200":
+          description: Task board found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskboard:
+                    $ref: "#/components/schemas/Taskboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - taskboards
+      summary: Update a task board
+      description: Partially updates a task board. At least one field must be supplied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskboardRequest"
+      responses:
+        "200":
+          description: Task board updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskboard:
+                    $ref: "#/components/schemas/Taskboard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - taskboards
+      summary: Delete a task board
+      responses:
+        "204":
+          description: Task board deleted (no content)
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
