@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/DoctorBohne/DeadLionBackend/internal/http/handler"
+	"github.com/DoctorBohne/DeadLionBackend/internal/repositories/abgabe"
 	"github.com/DoctorBohne/DeadLionBackend/internal/repositories/boards"
 	task "github.com/DoctorBohne/DeadLionBackend/internal/repositories/deadline_objects"
 	"github.com/DoctorBohne/DeadLionBackend/internal/repositories/user"
@@ -21,8 +22,12 @@ func NewRouter(d Deps) *gin.Engine {
 
 	// User bundle
 	userRepo := user.NewUserRepo(d.DB)
-	userService := services.NewUserService(userRepo)
-	meHandler := handler.NewMeHandler(userService)
+	userService := services.NewUserService(*userRepo)
+	meHandler := handler.NewMeHandler(*userService)
+
+	abgabeRepo := abgabe.NewAbgabeRepo(d.DB)
+	abgabeService := services.NewAbgabeService(*abgabeRepo)
+	abgabeHandler := handler.NewAbgabeHandler(abgabeService, userService)
 
 	r.GET("/healthz", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
@@ -50,10 +55,10 @@ func NewRouter(d Deps) *gin.Engine {
 	subtaskHandler := handler.NewSubtaskHandler(subtaskService)
 
 	v1.POST("/tasks/:taskId/subtasks", subtaskHandler.Create)
-	v1.GET("/tasks/:taskId/subtasks", subtaskHandler.List)
-	v1.GET("/tasks/:taskId/subtasks/:id", subtaskHandler.Get)
-	v1.PATCH("/tasks/:taskId/subtasks/:id", subtaskHandler.Update)
-	v1.DELETE("/tasks/:taskId/subtasks/:id", subtaskHandler.Delete)
+	v1.GET("/subtasks", subtaskHandler.List) // ?taskId=<uuid>
+	v1.GET("/subtasks/:id", subtaskHandler.Get)
+	v1.PATCH("/subtasks/:id", subtaskHandler.Update)
+	v1.DELETE("/subtasks/:id", subtaskHandler.Delete)
 
 	//userboard bundle
 	userboardRepo := boards.NewUserboardRepo(d.DB)
@@ -83,10 +88,21 @@ func NewRouter(d Deps) *gin.Engine {
 	taskboardHandler := handler.NewTaskboardHandler(taskboardService)
 
 	v1.POST("/tasks/:taskId/taskboards", taskboardHandler.Create)
-	v1.GET("/tasks/:taskId/taskboards", taskboardHandler.List)
-	v1.GET("/tasks/:taskId/taskboards/:id", taskboardHandler.Get)
-	v1.PATCH("/tasks/:taskId/taskboards/:id", taskboardHandler.Update)
-	v1.DELETE("/tasks/:taskId/taskboards/:id", taskboardHandler.Delete)
+	v1.GET("/taskboards", taskboardHandler.List)
+	v1.GET("/taskboards/:id", taskboardHandler.Get) //?taskId=<uuid>
+	v1.PATCH("/taskboards/:id", taskboardHandler.Update)
+	v1.DELETE("/taskboards/:id", taskboardHandler.Delete)
+
+	v1.POST("/abgaben", abgabeHandler.Create)
+	v1.GET("/abgaben", abgabeHandler.List)
+	v1.GET("/abgaben/:id", abgabeHandler.Get)
+	v1.PUT("/abgaben/:id", abgabeHandler.Update)
+
+	//riskcalculation bundle
+	riskService := services.NewRiskCalculatorService(abgabeRepo)
+
+	riskHandler := handler.NewRiskHandler(riskService, userRepo)
+	v1.GET("/abgaben/risklist", riskHandler.RetrieveRiskList)
 
 	return r
 }
