@@ -69,7 +69,7 @@ jobs:
             git reset --hard origin/main
             
             docker compose pull
-            docker compose up -d
+            docker compose --env-file /opt/deadlion-secrets/.env up -d
             
             docker image prune -f
             docker compose ps
