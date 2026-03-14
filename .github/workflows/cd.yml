@@ -68,9 +68,9 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             
-            docker compose pull
+            docker compose /opt/deadlion-secrets/.env pull
             docker compose --env-file /opt/deadlion-secrets/.env up -d
             
             docker image prune -f
-            docker compose ps
-            docker compose logs --no-color --tail=100
+            docker compose --env-file /opt/deadlion-secrets/.env ps
+            docker compose --env-file /opt/deadlion-secrets/.env logs --no-color --tail=100
