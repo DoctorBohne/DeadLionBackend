@@ -66,7 +66,7 @@ func (r Repo) ListByUserAndDateBeforeFromNow(ctx context.Context, userID uint, n
 	var items []abgabe.Abgabe
 	err := r.DB.WithContext(ctx).
 		Where("user_id = ?", userID).
-		Where("date_before >= ? AND date_before <= ?", now, requestDate).
+		Where("due_date >= ? AND due_date <= ?", now, requestDate).
 		Order("due_date asc").
 		Find(&items).Error
 	if err != nil {
