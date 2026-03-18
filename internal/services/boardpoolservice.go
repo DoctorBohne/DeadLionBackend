@@ -14,7 +14,7 @@ import (
 )
 
 type BoardPoolRepo interface {
-	Create(ctx context.Context, userID uint, p *models.BoardPool) error
+	Create(ctx context.Context, userID uint, p *models.BoardPool, explicitPosition bool) error
 	ListByBoardID(ctx context.Context, userID uint, boardID uuid.UUID) ([]models.BoardPool, error)
 	GetByID(ctx context.Context, userID uint, boardID, id uuid.UUID) (*models.BoardPool, error)
 	Update(ctx context.Context, userID uint, boardID, id uuid.UUID, updates map[string]any) (*models.BoardPool, error)
@@ -109,7 +109,7 @@ func (s *boardPoolService) Create(ctx context.Context, in CreateBoardPoolInput) 
 		return nil, errors.New("title must not be empty")
 	}
 
-	p := &models.BoardPool{
+	p := models.BoardPool{
 		BoardID:  in.BoardID,
 		Title:    title,
 		Position: 0,
@@ -131,14 +131,14 @@ func (s *boardPoolService) Create(ctx context.Context, in CreateBoardPoolInput) 
 		p.Color = c
 	}
 
-	if err := s.repo.Create(ctx, uid, p); err != nil {
+	if err := s.repo.Create(ctx, uid, &p, in.Position != nil); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// board not found / not owned
 			return nil, custom_errors.ErrNotFound
 		}
 		return nil, err
 	}
-	return p, nil
+	return &p, nil
 }
 
 func (s *boardPoolService) List(ctx context.Context, issuer, sub string, boardID uuid.UUID) ([]models.BoardPool, error) {
