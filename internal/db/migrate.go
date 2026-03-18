@@ -7,7 +7,11 @@ import (
 )
 
 func Migrate(gdb *gorm.DB) error {
-	return gdb.AutoMigrate(
+	if err := gdb.Exec(`CREATE EXTENSION IF NOT EXISTS pgcrypto`).Error; err != nil {
+		return err
+	}
+
+	if err := gdb.AutoMigrate(
 		&models.User{},
 		&abgabe.Abgabe{},
 		&abgabe.UniversityModule{},
@@ -16,5 +20,8 @@ func Migrate(gdb *gorm.DB) error {
 		&models.Task{},
 		&models.Subtask{},
 		&models.Taskboard{},
-	)
+	); err != nil {
+		return err
+	}
+	return nil
 }

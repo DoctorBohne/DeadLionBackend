@@ -7,7 +7,7 @@ import (
 )
 
 type Subtask struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v2()"`
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	TaskID      uuid.UUID `gorm:"type:uuid;not null"`
 	Title       string    `gorm:"type:text;not null"`
 	Description *string   `gorm:"type:text"`

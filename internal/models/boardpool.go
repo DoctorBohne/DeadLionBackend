@@ -7,7 +7,7 @@ import (
 )
 
 type BoardPool struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	BoardID   uuid.UUID `gorm:"type:uuid;not null"`
 	Title     string    `gorm:"type:text;not null"`
 	Color     string    `gorm:"type:text;default:'000000'"`
