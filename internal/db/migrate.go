@@ -11,5 +11,10 @@ func Migrate(gdb *gorm.DB) error {
 		&models.User{},
 		&abgabe.Abgabe{},
 		&abgabe.UniversityModule{},
+		&models.Userboard{},
+		&models.BoardPool{},
+		&models.Task{},
+		&models.Subtask{},
+		&models.Taskboard{},
 	)
 }
