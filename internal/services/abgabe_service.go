@@ -36,7 +36,6 @@ func (s AbgabeService) Create(ctx context.Context, userID uint, in abgabe.Create
 		DueDate:        in.DueDate,
 		RiskAssessment: abgabe.Risk(in.RiskAssessment),
 		UserID:         userID,
-		ModulID:        in.ModulID,
 	}
 	if err := s.r.Create(ctx, item); err != nil {
 		return nil, err
@@ -76,9 +75,7 @@ func (s AbgabeService) Update(ctx context.Context, userID, id uint, in abgabe.Up
 	if in.RiskAssessment != nil {
 		item.RiskAssessment = abgabe.Risk(*in.RiskAssessment)
 	}
-	if in.ModulID != nil {
-		item.ModulID = *in.ModulID
-	}
+
 	if err := s.r.Update(ctx, item); err != nil {
 		return nil, err
 	}
