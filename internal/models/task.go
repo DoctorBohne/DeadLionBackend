@@ -18,7 +18,7 @@ type Task struct {
 	BoardPool       int       `gorm:"type:int;not null"`
 	EstimateMinutes int       `gorm:"type:int;not null"`
 	SpendMinutes    int       `gorm:"type:int;not null"`
-	DueAt           time.Time `gorm:"type:datetime;not null"`
+	DueAt           time.Time `gorm:"not null"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
