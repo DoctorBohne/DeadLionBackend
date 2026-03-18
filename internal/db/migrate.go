@@ -22,15 +22,11 @@ func Migrate(gdb *gorm.DB) error {
 	); err != nil {
 		return err
 	}
-	if gdb.Migrator().HasColumn(&abgabe.Abgabe{}, "modul_id") {
-		if err := gdb.Migrator().DropColumn(&abgabe.Abgabe{}, "modul_id"); err != nil {
-			return err
-		}
+	if err := gdb.Exec(`ALTER TABLE abgabes DROP COLUMN IF EXISTS modul_id CASCADE`).Error; err != nil {
+		return err
 	}
-	if gdb.Migrator().HasTable("university_modules") {
-		if err := gdb.Migrator().DropTable("university_modules"); err != nil {
-			return err
-		}
+	if err := gdb.Exec(`DROP TABLE IF EXISTS university_modules CASCADE`).Error; err != nil {
+		return err
 	}
 	return nil
 }
