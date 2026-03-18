@@ -76,7 +76,7 @@ func TestAbgabeHandlerCreateSuccess(t *testing.T) {
 		createFn: func(ctx context.Context, userID uint, in abgabe.CreateAbgabeInput) (*abgabe.Abgabe, error) {
 			gotUserID = userID
 			gotInput = in
-			return &abgabe.Abgabe{Title: in.Title, DueDate: in.DueDate, RiskAssessment: abgabe.Risk(in.RiskAssessment), UserID: userID, ModulID: in.ModulID}, nil
+			return &abgabe.Abgabe{Title: in.Title, DueDate: in.DueDate, RiskAssessment: abgabe.Risk(in.RiskAssessment), UserID: userID}, nil
 		},
 	}
 	userService := stubUserService{user: &models.User{Model: gorm.Model{ID: 42}}}
@@ -104,7 +104,7 @@ func TestAbgabeHandlerCreateSuccess(t *testing.T) {
 	if gotUserID != 42 {
 		t.Fatalf("expected user id 42, got %d", gotUserID)
 	}
-	if gotInput.Title != "Mathe Aufgaben" || !gotInput.DueDate.Equal(expectedDueDate) || gotInput.ModulID != 3 {
+	if gotInput.Title != "Mathe Aufgaben" || !gotInput.DueDate.Equal(expectedDueDate) {
 		t.Fatalf("unexpected input data: %#v", gotInput)
 	}
 }
