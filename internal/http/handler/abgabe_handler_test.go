@@ -33,6 +33,10 @@ type stubAbgabeService struct {
 	updateFn func(ctx context.Context, userID, id uint, in abgabe.UpdateAbgabeInput) (*abgabe.Abgabe, error)
 }
 
+func (s stubAbgabeService) Delete(ctx context.Context, userID, id uint) error {
+	return nil
+}
+
 func (s stubAbgabeService) ListByBeforeDueDate(ctx context.Context, userID uint, beforeDueDate time.Time) ([]abgabe.Abgabe, error) {
 	return nil, nil
 	//probably needs fixing xd
