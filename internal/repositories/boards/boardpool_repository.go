@@ -22,15 +22,15 @@ func (r *BoardPoolRepo) scoped(ctx context.Context, userID uint) *gorm.DB {
 	// and pools table is "board_pools" with column board_id
 	return r.db.WithContext(ctx).
 		Model(&models.BoardPool{}).
-		Joins("JOIN boards ON boards.id = board_pools.board_id").
-		Where("boards.user_id = ?", userID)
+		Joins("JOIN userboards ON userboards.id = board_pools.board_id").
+		Where("userboards.user_id = ?", userID)
 }
 
 // Create a pool only if board belongs to user
 func (r *BoardPoolRepo) Create(ctx context.Context, userID uint, p *models.BoardPool) error {
 	var cnt int64
 	if err := r.db.WithContext(ctx).
-		Table("boards").
+		Table("userboards").
 		Where("id = ? AND user_id = ?", p.BoardID, userID).
 		Count(&cnt).Error; err != nil {
 		return err
