@@ -11,6 +11,5 @@ type RiskItem struct {
 	RiskScore float64
 
 	//optional fields
-	ModuleID uint    `json:"module,omitempty"`
-	Room     *string `json:"room,omitempty"`
+	Room *string `json:"room,omitempty"`
 }

@@ -58,7 +58,6 @@ func (s *RiskCalculatorService) convertSubmissionEntryToRiskItem(submissionEntry
 		Title:    submissionEntry.Title,
 		Deadline: submissionEntry.DueDate,
 		Priority: int(submissionEntry.RiskAssessment),
-		ModuleID: submissionEntry.ModulID,
 	}
 }
 
