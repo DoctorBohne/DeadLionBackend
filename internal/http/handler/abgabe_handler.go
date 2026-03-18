@@ -21,6 +21,7 @@ type AbgabeService interface {
 	List(ctx context.Context, userID uint) ([]abgabe.Abgabe, error)
 	ListByBeforeDueDate(ctx context.Context, userID uint, beforeDueDate time.Time) ([]abgabe.Abgabe, error)
 	Update(ctx context.Context, userID, id uint, in abgabe.UpdateAbgabeInput) (*abgabe.Abgabe, error)
+	Delete(ctx context.Context, userID, id uint) error
 }
 
 type AbgabeHandler struct {
@@ -124,6 +125,22 @@ func (h *AbgabeHandler) resolveUser(c *gin.Context) (*models.User, bool) {
 		return nil, false
 	}
 	return user, true
+}
+
+func (h *AbgabeHandler) Delete(c *gin.Context) {
+	user, ok := h.resolveUser(c)
+	if !ok {
+		return
+	}
+	id, ok := parseUintParam(c, "id")
+	if !ok {
+		return
+	}
+	if err := h.abgaben.Delete(c.Request.Context(), user.ID, id); err != nil {
+		handleAbgabeError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func parseUintParam(c *gin.Context, name string) (uint, bool) {

@@ -15,6 +15,7 @@ type AbgabeRepo interface {
 	ListByUserAndDateBefore(ctx context.Context, userID uint, date time.Time) ([]abgabe.Abgabe, error)
 	Update(ctx context.Context, ab *abgabe.Abgabe) error
 	ListByUserAndDateBeforeFromNow(ctx context.Context, userID uint, now, requestDate time.Time) ([]abgabe.Abgabe, error)
+	Delete(ctx context.Context, ab *abgabe.Abgabe) error
 }
 
 type AbgabeService struct {
@@ -80,4 +81,15 @@ func (s AbgabeService) Update(ctx context.Context, userID, id uint, in abgabe.Up
 		return nil, err
 	}
 	return item, nil
+}
+
+func (s AbgabeService) Delete(ctx context.Context, userID, id uint) error {
+	item, err := s.r.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if item.UserID != userID {
+		return custom_errors.ErrForbidden
+	}
+	return s.r.Delete(ctx, item)
 }

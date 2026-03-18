@@ -97,6 +97,7 @@ func NewRouter(d Deps) *gin.Engine {
 	v1.GET("/abgaben", abgabeHandler.List)
 	v1.GET("/abgaben/:id", abgabeHandler.Get)
 	v1.PUT("/abgaben/:id", abgabeHandler.Update)
+	v1.DELETE("/abgaben/:id", abgabeHandler.Delete)
 
 	//riskcalculation bundle
 	riskService := services.NewRiskCalculatorService(abgabeRepo)

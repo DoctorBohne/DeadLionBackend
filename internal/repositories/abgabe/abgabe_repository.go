@@ -74,3 +74,7 @@ func (r Repo) ListByUserAndDateBeforeFromNow(ctx context.Context, userID uint, n
 	}
 	return items, nil
 }
+
+func (r Repo) Delete(ctx context.Context, ab *abgabe.Abgabe) error {
+	return r.DB.WithContext(ctx).Delete(ab).Error
+}
