@@ -19,3 +19,8 @@ type RiskRequest struct {
 type UserService interface {
 	FindOrCreate(ctx context.Context, in services.CreateUserInput) (*models.User, bool, error)
 }
+
+type MeUserService interface {
+	FindOrCreate(ctx context.Context, in services.CreateUserInput) (*models.User, bool, error)
+	MarkOnboardingComplete(ctx context.Context, issuer, sub string) error
+}

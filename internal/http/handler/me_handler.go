@@ -11,10 +11,10 @@ import (
 )
 
 type MeHandler struct {
-	usersvc services.UserService
+	usersvc MeUserService
 }
 
-func NewMeHandler(usersvc services.UserService) *MeHandler {
+func NewMeHandler(usersvc MeUserService) *MeHandler {
 	return &MeHandler{usersvc}
 }
 
