@@ -42,12 +42,6 @@ func (s *stubTaskRepo) Delete(ctx context.Context, userID uint, id uuid.UUID) (b
 	return s.deleteFn(ctx, userID, id)
 }
 
-func userWithID(id uint) *models.User {
-	u := &models.User{}
-	u.ID = id
-	return u
-}
-
 // ---- TaskService.Create tests ----
 
 func TestTaskService_Create_Success(t *testing.T) {
