@@ -23,7 +23,7 @@ func NewRouter(d Deps) *gin.Engine {
 	// User bundle
 	userRepo := user.NewUserRepo(d.DB)
 	userService := services.NewUserService(*userRepo)
-	meHandler := handler.NewMeHandler(*userService)
+	meHandler := handler.NewMeHandler(userService)
 
 	abgabeRepo := abgabe.NewAbgabeRepo(d.DB)
 	abgabeService := services.NewAbgabeService(*abgabeRepo)
