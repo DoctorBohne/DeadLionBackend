@@ -1,0 +1,20 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  clone_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout des aktuellen Repositories
+      uses: actions/checkout@v3
+    - name: Führe CD-Skripte aus
+      run: |
+        echo "Repository geklont, jetzt starte die CD-Prozesse..."
+        cd DeadLionBackend
+        go run main.go
+      shell: bash
